@@ -4,6 +4,7 @@ class Book
     public string Title {get; set;}
     public string Author {get; set;}
     public bool IsBorrowed {get; set;}
+    public int? BorrowedByUserId {get; set;}
 }
 
 class User
@@ -17,6 +18,9 @@ class LibraryService
     List<Book> books = new List<Book>();
     List<User> users = new List<User>();
 
+    int nextBookId = 0;
+    int nextUserId = 0;
+
     public void AddBook()
     {
         Console.Write("Write the book title: ");
@@ -27,27 +31,42 @@ class LibraryService
 
         books.Add(new Book
         {
-            Id = books.Count,
+            Id = nextBookId,
             Title = title,
             Author = author,
             IsBorrowed = false
         });
+
+        nextBookId++;
     }
 
     public void BorrowBook()
     {
-        int id = ReadInt("Write the book id: ");
+        int bookId = ReadInt("Write the book id: ");
 
-        if (id > books.Count)
+        if (bookId < 0 || bookId >= books.Count)
         {
-            Console.WriteLine("Invalid index. Try again.");
+            Console.WriteLine("Invalid book id. Try again.");
+            return;
+        }
+        
+        int userId = ReadInt("Write the user id: ");
+
+        if (userId < 0 || userId >= users.Count)
+        {
+            Console.WriteLine("Invalid user id. Try again.");
             return;
         }
 
-        if (books[id].IsBorrowed == false) books[id].IsBorrowed = true;
+        if (books[bookId].IsBorrowed == false) 
+        {
+            books[bookId].IsBorrowed = true;
+            books[bookId].BorrowedByUserId = userId;
+            Console.WriteLine("Book successfully borrowed.");
+        }
         else
         {
-            Console.WriteLine("The book is already borrowed< choose another book.");
+            Console.WriteLine("Book is already borrowed, choose another book.");
             return;
         }
         
@@ -55,7 +74,24 @@ class LibraryService
 
     public void ReturnBook()
     {
-        
+        int bookId = ReadInt("Write the book id: ");
+
+        if (bookId < 0 || bookId >= books.Count)
+        {
+            Console.WriteLine("Invalid book id. Try again.");
+            return;
+        }
+
+        if (!books[bookId].IsBorrowed)
+        {
+            Console.WriteLine("Book is not borrowed.");
+            return;
+        }
+
+        books[bookId].IsBorrowed = false;
+        books[bookId].BorrowedByUserId = null;
+
+        Console.WriteLine("Book successfully returned.");
     }
 
     public void ShowBooks()
@@ -63,7 +99,16 @@ class LibraryService
         Console.WriteLine("Books list: ");
         for (int i = 0; i < books.Count; i++)
         {
-            Console.WriteLine($"{books[i].Id}. {books[i].Title} by {books[i].Author}. Is borrowed: {books[i].IsBorrowed}");
+            var book = books[i];
+
+            string status = "Available";
+
+            if (book.IsBorrowed)
+            {
+                var user = users.FirstOrDefault(u => u.Id == book.BorrowedByUserId);
+                status = $"Borrowed by {user?.Name}";
+            }
+            Console.WriteLine($"{book.Id}. {book.Title} by {book.Author} - {status}");
         }
         Console.WriteLine();
     }
@@ -75,9 +120,11 @@ class LibraryService
 
         users.Add(new User
         {
-            Id = users.Count,
+            Id = nextUserId,
             Name = name
         });
+
+        nextUserId++;
     }
 
     public void ShowUsers()
@@ -113,7 +160,7 @@ class Program
         while (true)
         {
             program.ShowMenu();
-            program.Choise();
+            program.Choice();
         }    
     }
 
@@ -126,14 +173,14 @@ class Program
             "3. Add user.\n"+
             "4. Show all users.\n"+
             "5. Borrow book.\n"+
-            "6. Return bool.\n"+
+            "6. Return book.\n"+
             "0. Exit program.\n"
         );
     }
 
-    public void Choise()
+    public void Choice()
     {
-        int choise = library.ReadInt("Write your choise: ");
+        int choise = library.ReadInt("Write your choice: ");
 
         switch (choise)
         {
