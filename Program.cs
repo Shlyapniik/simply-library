@@ -36,6 +36,20 @@ class LibraryService
 
     public void BorrowBook()
     {
+        int id = ReadInt("Write the book id: ");
+
+        if (id > books.Count)
+        {
+            Console.WriteLine("Invalid index. Try again.");
+            return;
+        }
+
+        if (books[id].IsBorrowed == false) books[id].IsBorrowed = true;
+        else
+        {
+            Console.WriteLine("The book is already borrowed< choose another book.");
+            return;
+        }
         
     }
 
@@ -52,6 +66,41 @@ class LibraryService
             Console.WriteLine($"{books[i].Id}. {books[i].Title} by {books[i].Author}. Is borrowed: {books[i].IsBorrowed}");
         }
         Console.WriteLine();
+    }
+
+    public void AddUser()
+    {
+        Console.Write("Write the user name: ");
+        string name = Console.ReadLine();
+
+        users.Add(new User
+        {
+            Id = users.Count,
+            Name = name
+        });
+    }
+
+    public void ShowUsers()
+    {
+        Console.WriteLine("Users list: ");
+        for (int i = 0; i < users.Count; i++)
+        {
+            Console.WriteLine($"{users[i].Id}. {users[i].Name}");
+        }
+        Console.WriteLine();
+    }
+
+    public int ReadInt(string message)
+    {
+        int number;
+        Console.Write(message);
+        
+        while (!int.TryParse(Console.ReadLine(), out number))
+        {
+            Console.WriteLine("Invalid input. Try again: ");
+        }
+
+        return number;
     }
 }
 
@@ -84,7 +133,7 @@ class Program
 
     public void Choise()
     {
-        int choise = ReadInt("Write your choise: ");
+        int choise = library.ReadInt("Write your choise: ");
 
         switch (choise)
         {
@@ -98,15 +147,19 @@ class Program
                 break;
             case 3:
                 Console.Clear();
+                library.AddUser();
                 break;
             case 4:
                 Console.Clear();
+                library.ShowUsers();
                 break;
             case 5:
                 Console.Clear();
+                library.BorrowBook();
                 break;
             case 6:
                 Console.Clear();
+                library.ReturnBook();
                 break;
             case 0:
                 Console.Clear();
@@ -117,16 +170,5 @@ class Program
         }
     }
 
-    public int ReadInt(string message)
-    {
-        int number;
-        Console.Write(message);
-        
-        while (!int.TryParse(Console.ReadLine(), out number))
-        {
-            Console.WriteLine("Invalid input. Try again: ");
-        }
-
-        return number;
-    }
+    
 }
