@@ -1,3 +1,7 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
+
 class Book
 {
     public int Id {get; set;}
@@ -13,10 +17,16 @@ class User
     public string Name {get; set;}
 }
 
+class LibraryData
+{
+    public List<Book> Books {get; set;}
+    public List<User> Users {get; set;}
+}
+
 class LibraryService
 {
-    List<Book> books = new List<Book>();
-    List<User> users = new List<User>();
+    List<Book> books = [];
+    List<User> users = [];
 
     int nextBookId = 0;
     int nextUserId = 0;
@@ -106,7 +116,9 @@ class LibraryService
             if (book.IsBorrowed)
             {
                 var user = users.FirstOrDefault(u => u.Id == book.BorrowedByUserId);
-                status = $"Borrowed by {user?.Name}";
+                status = user != null 
+                    ? $"Borrowed by {user.Name}" 
+                    : "Borrowed (unknown user)";
             }
             Console.WriteLine($"{book.Id}. {book.Title} by {book.Author} - {status}");
         }
@@ -137,6 +149,66 @@ class LibraryService
         Console.WriteLine();
     }
 
+    public void SaveToFile()
+    {
+        var data = new LibraryData
+        {
+            Books = books,
+            Users = users
+        };
+
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+            Converters = { new JsonStringEnumConverter() }
+        };
+
+        string jsonString = JsonSerializer.Serialize(data, options);
+        File.WriteAllText("data.json", jsonString);
+
+        Console.WriteLine("Data saved.");
+    }
+
+    public void LoadFromFile()
+    {
+        string jsonPath = "data.json";
+
+        if (!File.Exists(jsonPath))
+        {
+            Console.WriteLine("No data in file");
+            return;
+        }
+
+        try
+        {
+            string jsonString = File.ReadAllText(jsonPath);
+
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+                Converters = { new JsonStringEnumConverter() }
+            };
+
+            var data = JsonSerializer.Deserialize<LibraryData>(jsonString, options);
+            books = data?.Books ?? [];
+            users = data?.Users ?? [];
+            nextBookId = books.Count > 0 ? books.Max(b => b.Id) + 1 : 0;
+            nextUserId = users.Count > 0 ? users.Max(b => b.Id) + 1 : 0;
+
+            Console.WriteLine("Data loaded.");
+        }
+        catch
+        {
+            Console.WriteLine();
+            books = [];
+            users = [];
+            nextBookId = books.Count > 0 ? books.Max(b => b.Id) + 1 : 0;
+            nextUserId = users.Count > 0 ? users.Max(b => b.Id) + 1 : 0;
+        }
+    }
+
     public int ReadInt(string message)
     {
         int number;
@@ -156,6 +228,7 @@ class Program
     LibraryService library = new LibraryService();
     public static void Main()
     {
+        Console.Clear();
         Program program = new Program();
         while (true)
         {
@@ -174,6 +247,8 @@ class Program
             "4. Show all users.\n"+
             "5. Borrow book.\n"+
             "6. Return book.\n"+
+            "7. Save books list to file.\n"+
+            "8. Load books list from file.\n"+
             "0. Exit program.\n"
         );
     }
@@ -207,6 +282,14 @@ class Program
             case 6:
                 Console.Clear();
                 library.ReturnBook();
+                break;
+            case 7:
+                Console.Clear();
+                library.SaveToFile();
+                break;
+            case 8:
+                Console.Clear();
+                library.LoadFromFile();
                 break;
             case 0:
                 Console.Clear();

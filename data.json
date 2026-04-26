@@ -1,0 +1,35 @@
+{
+  "Books": [
+    {
+      "Id": 0,
+      "Title": "a",
+      "Author": "b",
+      "IsBorrowed": false,
+      "BorrowedByUserId": null
+    },
+    {
+      "Id": 1,
+      "Title": "c",
+      "Author": "d",
+      "IsBorrowed": true,
+      "BorrowedByUserId": 1
+    },
+    {
+      "Id": 2,
+      "Title": "e",
+      "Author": "f",
+      "IsBorrowed": false,
+      "BorrowedByUserId": null
+    }
+  ],
+  "Users": [
+    {
+      "Id": 0,
+      "Name": "r"
+    },
+    {
+      "Id": 1,
+      "Name": "v"
+    }
+  ]
+}
